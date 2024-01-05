@@ -1,0 +1,28 @@
++ async getAllCountry
++ async getCountryDetails
++ async createCountry
++ async deleteCountry
++ async getCountryStatistics
+
++ async getAllRegion
++ async getRegionStatistics
++ async getFilteredRegion
+- async deleteRegion
++ async getPagedRegion
+
+
++ async findAllAirport
++ async getAllAirport
++ async getAirportStatistics
++ async getFilteredAirport
+- async deleteAirport
++ async getPagedAirport
+
+
+
+- async getRegionDetails
+- async getAirportDetails
+- async createRegion
+- async createAirport
+- async getFilteredCountry (?)
+- async getPagedCountry

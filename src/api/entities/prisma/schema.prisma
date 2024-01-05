@@ -10,12 +10,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Teacher {
+model Teacher {Int
   name       String   @id
   city       String
   createdOn  DateTime @default(now()) @map("created_on")
   updatedOn  DateTime @updatedAt @map("updated_on")
 
   @@map("teachers")
+}
+
+model country{
+  id            Int    @id
+  continent     String
+  iso_country   String
+  regions       region[]
+}
+
+model region{
+  id              Int   @id
+  iso_region      String
+  municipality    String
+  gps_code        String
+  local_code      String
+  airports        airport[]
+}
+
+model airport{
+  id              Int     @id
+  ident           String
+  type            String
+  name            String
+  elevation_ft    String
+  iata_code       String
+  coordinates     String
 }
 

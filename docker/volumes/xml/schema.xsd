@@ -1,0 +1,61 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="AirportCode">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Countries">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Country" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Regions">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Region" maxOccurs="unbounded" minOccurs="0">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="Airports">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element name="Airport" maxOccurs="unbounded" minOccurs="0">
+                                        <xs:complexType>
+                                          <xs:simpleContent>
+                                            <xs:extension base="xs:string">
+                                              <xs:attribute type="xs:byte" name="id" use="optional"/>
+                                              <xs:attribute type="xs:string" name="ident" use="optional"/>
+                                              <xs:attribute type="xs:string" name="type" use="optional"/>
+                                              <xs:attribute type="xs:string" name="name" use="optional"/>
+                                              <xs:attribute type="xs:string" name="elevation_ft" use="optional"/>
+                                              <xs:attribute type="xs:string" name="iata_code" use="optional"/>
+                                              <xs:attribute type="xs:string" name="coordinates" use="optional"/>
+                                            </xs:extension>
+                                          </xs:simpleContent>
+                                        </xs:complexType>
+                                      </xs:element>
+                                    </xs:sequence>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                              <xs:attribute type="xs:byte" name="id" use="optional"/>
+                              <xs:attribute type="xs:string" name="iso_region" use="optional"/>
+                              <xs:attribute type="xs:string" name="municipality" use="optional"/>
+                              <xs:attribute type="xs:string" name="gps_code" use="optional"/>
+                              <xs:attribute type="xs:string" name="local_code" use="optional"/>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute type="xs:byte" name="id" use="optional"/>
+                  <xs:attribute type="xs:string" name="iso_country" use="optional"/>
+                  <xs:attribute type="xs:string" name="continent" use="optional"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
