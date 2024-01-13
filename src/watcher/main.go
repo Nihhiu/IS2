@@ -27,20 +27,21 @@ const (
 
 )
 
-type Country struct{
-	CountryName string `json:"country_name"`
+// TODO
+type Country struct {
+	CountryName string   `json:"country_name"`
+	Region      []Region `json:"region"`
 }
 
 type Region struct {
-	RegionName string `json:"region_name"`
-	Country    Country `json:"country"`
+	RegionName string   `json:"region_name"`
+	Airports   []Airport `json:"airports"`
 }
 
 type Airport struct {
 	AirportName  string `json:"airport_name"`
 	BaseMSRP     string `json:"base_msrp"`
 	Range        string `json:"range"`
-	Region       Region `json:"region"`
 }
 
 func main() {
@@ -102,6 +103,7 @@ func main() {
         for _, info := range newFileInfo {
             fileNames = append(fileNames, info["file_name"].(string))
         }
+		# TODO
 		countries := processModelsXML(fileNames)
 		regions := processCountiesXML(fileNames)
 		airports := processCarsXML(fileNames)
@@ -190,7 +192,7 @@ func processCountriesXML(fileNames []string) []Country {
 
 	var countries []Country
 
-	uniqueCountries := make(map[Country]struct{})
+	uniqueCountries := make(map[string]struct{})
 
 	for _, fileName := range fileNames {
 		// Consultar o XML na tabela imported_documents usando XPath
@@ -212,26 +214,22 @@ func processCountriesXML(fileNames []string) []Country {
 			if err := doc.ReadFromString(xmlString); err != nil {
 				log.Fatal(err)
 			}
-
+			// TODO
 			// Exemplo de consulta XPath para extrair todas as Brands e Models
-			brands := doc.FindElements("//Brand")
-			for _, brand := range brands {
-				brandName := brand.SelectAttrValue("name", "")
+			countryElements := doc.FindElements("//Country")
+			for _, countryElement := range countryElements {
+				countryName := countryElement.SelectAttrValue("iso_country", "")
 
-				models := brand.FindElements("./Models/Model")
-				for _, model := range models {
-					modelName := model.SelectAttrValue("model", "")
-
-					brandModel := BrandModel{
-						BrandName: brandName,
-						ModelName: modelName,
+				// Check if the country already exists
+				if _, exists := uniqueCountries[countryName]; !exists {
+					country := Country{
+						CountryName: countryName,
+						Regions:     extractRegionInfo(doc),
 					}
 
-					if _, exists := uniqueModels[brandModel]; !exists {
-						// Adicione o modelo único à lista e ao mapa
-						countries = append(countries, extractCountryInfo(doc)...)
-						uniqueModels[brandModel] = struct{}{}
-					}
+					// Add the country to the list and the map
+					countries = append(countries, country)
+					uniqueCountries[countryName] = struct{}{}
 				}
 			}
 		}
@@ -247,7 +245,7 @@ func extractCountryInfo(doc *etree.Document) []Country {
 	// Exemplo de consulta XPath para extrair informações sobre Country
 	countryElements := doc.FindElements("//Country")
 	for _, countryElement := range countryElements {
-		countryName := countryElement.SelectAttrValue("name", "")
+		countryName := countryElement.SelectAttrValue("iso_country", "")
 
 		country := Country{
 			CountryName: countryName,
@@ -279,6 +277,8 @@ func processRegionsXML(fileNames []string) []Region {
 
     var regions []Region
 
+    uniqueRegions := make(map[string]struct{})
+
     for _, fileName := range fileNames {
         // Consultar o XML na tabela imported_documents usando XPath
         rows, err := db.Query("SELECT xml FROM imported_documents WHERE file_name = $1", fileName)
@@ -300,8 +300,17 @@ func processRegionsXML(fileNames []string) []Region {
                 log.Fatal(err)
             }
 
-            // Exemplo de consulta XPath para extrair informações sobre Car
-            regions = append(regions, extractRegionInfo(doc)...)
+            // Exemplo de consulta XPath para extrair informações sobre Region
+            newRegions := extractRegionInfo(doc)
+
+            // Add new regions to the uniqueRegions map
+            for _, newRegion := range newRegions {
+                key := newRegion.RegionName
+                if _, exists := uniqueRegions[key]; !exists {
+                    regions = append(regions, newRegion)
+                    uniqueRegions[key] = struct{}{}
+                }
+            }
         }
     }
 
@@ -312,47 +321,55 @@ func processRegionsXML(fileNames []string) []Region {
 func extractRegionInfo(doc *etree.Document) []Region {
     var regions []Region
 
-    // Exemplo de consulta XPath para extrair informações sobre Car
-    RegionElements := doc.FindElements("//Region")
-    for _, RegionElement := range regionElements {
-		regionName := regionElement.SelectAttrValue("name", "")
-		countryName := regionElement.FindElement("./Country").SelectAttrValue("name", "")
+    // Exemplo de consulta XPath para extrair informações sobre Region
+    regionElements := doc.FindElements("//Region")
+    for _, regionElement := range regionElements {
+        regionName := regionElement.SelectAttrValue("name", "")
+        
+        // Extract airports for the region
+        airports := extractAirportInfo(regionElement)
+        
+        region := Region{
+            RegionName: regionName,
+            Airports:   airports,
+        }
 
-		country := Country{
-			CountryName: countryName,
-		}
+        regions = append(regions, region)
+    }
 
-		region := Region{
-			RegionName: regionName,
-			Country:    country,
-		}
-
-		regions = append(regions, region)
-	}
-
-	return regions
+    return regions
 }
 
-func getModelName(doc *etree.Document, modelRef string) string {
-    // Exemplo de consulta XPath para obter o nome do Model
-    modelElement := doc.FindElement(fmt.Sprintf("//Model[@id='%s']", modelRef))
-    if modelElement != nil {
-        return modelElement.SelectAttrValue("model", "")
+func getCountryName(doc *etree.Document, countryRef string) string {
+    // Exemplo de consulta XPath para obter o nome do Country
+    countryElement := doc.FindElement(fmt.Sprintf("//Country[@id='%s']", countryRef))
+    if countryElement != nil {
+        return countryElement.SelectElement("iso_country").Text()
     }
     return ""
 }
 
-func getCountyName(doc *etree.Document, countyRef string) string {
-    // Exemplo de consulta XPath para obter o nome do County
-    countyElement := doc.FindElement(fmt.Sprintf("//County[@id='%s']", countyRef))
-    if countyElement != nil {
-        return countyElement.SelectAttrValue("name", "")
+func getRegionName(doc *etree.Document, regionRef string) string {
+    // Exemplo de consulta XPath para obter o nome do Region
+    regionElement := doc.FindElement(fmt.Sprintf("//Region[@id='%s']", regionRef))
+    if regionElement != nil {
+        return regionElement.SelectElement("iso_region").Text()
+    }
+    return ""
+}
+
+func getAirportName(doc *etree.Document, airportRef string) string {
+    // Exemplo de consulta XPath para obter o nome do Airport
+    airportElement := doc.FindElement(fmt.Sprintf("//Airport[@id='%s']", airportRef))
+    if airportElement != nil {
+        return airportElement.SelectElement("name").Text()
     }
     return ""
 }
 
 
-func processAirportsXML(fileNames []string) []string {
+
+func processAirportsXML(fileNames []string) []Airport {
 	// Conectar à db-xml
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
@@ -394,21 +411,21 @@ func processAirportsXML(fileNames []string) []string {
 				if err := doc.ReadFromString(xmlString); err != nil {
 					log.Fatal(err)
 				}
-	
-				// Exemplo de consulta XPath para extrair todas as Brands
-				counties := doc.FindElements("//County")
-				for _, county := range counties {
-					countyName := county.SelectAttrValue("name", "")
-					//fmt.Printf("Brand Name: %s\n", brandName)
 
-					if _, exists := uniqueCounties[countyName]; !exists {
-						airports = append(airports, extractAirportInfo(doc)...)
-						uniqueCounties[countyName] = struct{}{}
+				// Exemplo de consulta XPath para extrair informações sobre Airport
+				newAirports := extractAirportInfo(doc)
+
+				// Add new airports to the uniqueAirports map
+				for _, newAirport := range newAirports {
+					key := newAirport.AirportName
+					if _, exists := uniqueAirports[key]; !exists {
+						airports = append(airports, newAirport)
+						uniqueAirports[key] = struct{}{}
 					}
 				}
 			}
 		}
-	
+
 		fmt.Println("Airports:", airports)
 		return airports
 }
@@ -421,18 +438,16 @@ func extractAirportInfo(doc *etree.Document) []Airport {
 	for _, airportElement := range airportElements {
 		airportName := airportElement.SelectAttrValue("name", "")
 		baseMSRP := airportElement.FindElement("./Information").SelectAttrValue("basemsrp", "")
-		range := airportElement.FindElement("./Information").SelectAttrValue("range", "")
+		rangeVal := airportElement.FindElement("./Information").SelectAttrValue("range", "")
 		regionName := airportElement.FindElement("./Region").SelectAttrValue("name", "")
 
-		region := Region{
-			RegionName: regionName,
-		}
-
 		airport := Airport{
-			AirportName:  airportName,
-			BaseMSRP:     baseMSRP,
-			Range:        range,
-			Region:       region,
+			AirportName: airportName,
+			BaseMSRP:    baseMSRP,
+			Range:       rangeVal,
+			Region: Region{
+				RegionName: regionName,
+			},
 		}
 
 		airports = append(airports, airport)
