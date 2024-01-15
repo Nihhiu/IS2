@@ -22,17 +22,26 @@ const (
 	port       = 5432
 )
 
-type Message struct{
+type Message struct {
 	CountryName string `json:"CountryName"`
-	RegionName string `json:"RegionName"`
-	AiportName string `json:"AirportName"`
+	RegionName  string `json:"RegionName"`
+	AiportName  string `json:"AirportName"`
 }
 
-type Model struct {
-	CountryID string `json:"CountryID"`
-	RegionID string `json:"RegionID"`
-	AiportID string `json:"AirportID"`
+type Country struct {
+	CountryName string `json:"CountryName"`
 }
+
+type Region struct {
+	RegionName string `json:"RegionName"`
+	CountryID  string `json:"CountryID"`
+}
+
+type Airport struct {
+	AirportName string `json:"AirportName"`
+	RegionID    string `json:"RegionID"`
+}
+
 
 
 
@@ -106,29 +115,37 @@ func main() {
 				messagesProcessed = true
 				fmt.Println("Messages processed. Exiting...")
 	
-				modelsByCountry := make(map[string][]Message)
-				modelsByRegion := make(map[string][]Message)
-				modelsByAirport := make(map[string][]Message)
+				airportsByRegion := make(map[string][]Message)
+				regionsByCountry := make(map[string][]Message)
 
 				for _, msg := range receivedMessages {
-					modelsByCountry[msg.CountryName] = append(modelsByCountry[msg.CountryName], msg)
-					modelsByRegion[msg.CountryName+"_"+msg.RegionName] = append(modelsByRegion[msg.CountryName+"_"+msg.RegionName], msg)
-					modelsByAirport[msg.CountryName+"_"+msg.RegionName+"_"+msg.AirportName] = append(modelsByAirport[msg.CountryName+"_"+msg.RegionName+"_"+msg.AirportName], msg)
+					airportsByRegion[msg.CountryName+"_"+msg.RegionName] = append(airportsByRegion[msg.CountryName+"_"+msg.RegionName], msg)
+					regionsByCountry[msg.CountryName] = append(regionsByCountry[msg.CountryName], msg)
 				}
 				
-				for countryName, regions := range modelsByCountry {
-					var regionID int
-					for _, region := range regions {
-						regionID, err := postRegionName(region.RegionName, 0)
+				// Create countries
+				for countryName := range regionsByCountry {
+					countryID, err := postCountryName(countryName)
+					if err != nil {
+						log.Println("Error posting country:", err)
+						continue
+					}
+
+					// Create regions within countries
+					for _, region := range regionsByCountry[countryName] {
+						regionID, err := postRegionName(region.RegionName, countryID)
 						if err != nil {
 							log.Println("Error posting region:", err)
 							continue
 						}
-				
-						err = postCountryWithRegion(countryName, regionID)
-						if err != nil {
-							log.Println("Error posting country:", err)
-							continue
+
+						// Create airports within regions
+						for _, airport := range airportsByRegion[countryName+"_"+region.RegionName] {
+							err := postAirportName(airport.AiportName, regionID)
+							if err != nil {
+								log.Println("Error posting airport:", err)
+								continue
+							}
 						}
 					}
 				}
@@ -142,31 +159,72 @@ func main() {
 
 
 func postCountryName(countryName string) (string, error) {
-    url := fmt.Sprintf("%s/countries/addCountry", apiBaseURL)
-    jsonData := fmt.Sprintf(`{"CountryName":"%s"}`, countryName)
-    resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
-    if err != nil {
-        return "", err
-    }
-    defer resp.Body.Close()
+	url := fmt.Sprintf("%s/countries/addCountry", apiBaseURL)
+	jsonData := fmt.Sprintf(`{"CountryName":"%s"}`, countryName)
+	resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
 
-    var result struct {
-        CountryID string `json:"CountryID"`
-    }
+	var result struct {
+		CountryID string `json:"CountryID"`
+	}
 
-    err = json.NewDecoder(resp.Body).Decode(&result)
-    if err != nil {
-        return "", err
-    }
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return "", err
+	}
 
-    if resp.StatusCode != http.StatusOK {
-        return "", fmt.Errorf("failed to post country: %s", resp.Status)
-    }
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return "", fmt.Errorf("failed to post country: %s", resp.Status)
+	}
 
-    return result.CountryID, nil
+	return result.CountryID, nil
 }
 
-func postRegionName(regionName, countryID string) (string, error) {
+func postRegionName(regionName string, countryID string) (string, error) {
+	url := fmt.Sprintf("%s/regions/addRegion", apiBaseURL)
+	jsonData := fmt.Sprintf(`{"RegionName":"%s","CountryID":"%s"}`, regionName, countryID)
+	resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		RegionID string `json:"RegionID"`
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return "", fmt.Errorf("failed to post region: %s", resp.Status)
+	}
+
+	return result.RegionID, nil
+}
+
+func postAirportName(airportName string, regionID string) error {
+	url := fmt.Sprintf("%s/airports/addAirport", apiBaseURL)
+	jsonData := fmt.Sprintf(`{"AirportName":"%s","RegionID":"%s"}`, airportName, regionID)
+	resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("failed to post airport: %s", resp.Status)
+	}
+
+	return nil
+}
+
+func postRegionWithAirport(regionName, countryID string) (string, error) {
     url := fmt.Sprintf("%s/regions/addRegion", apiBaseURL)
     jsonData := fmt.Sprintf(`{"RegionName":"%s","CountryID":"%s"}`, regionName, countryID)
     resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
@@ -184,48 +242,16 @@ func postRegionName(regionName, countryID string) (string, error) {
         return "", err
     }
 
-    if resp.StatusCode != http.StatusOK {
+    if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
         return "", fmt.Errorf("failed to post region: %s", resp.Status)
     }
 
     return result.RegionID, nil
 }
 
-func postAirportName(airportName, regionID string) error {
-    url := fmt.Sprintf("%s/airports/addAirport", apiBaseURL)
-    jsonData := fmt.Sprintf(`{"AirportName":"%s","RegionID":"%s"}`, airportName, regionID)
-    resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
-    if err != nil {
-        return err
-    }
-    defer resp.Body.Close()
-
-    if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-        return fmt.Errorf("failed to post airport: %s", resp.Status)
-    }
-
-    return nil
-}
-
-func postRegionWithAirport(regionName, airportID string) error {
-    url := fmt.Sprintf("%s/regions/addRegion", apiBaseURL)
-    jsonData := fmt.Sprintf(`{"RegionName":"%s","AirportID":"%s"}`, regionName, airportID)
-    resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
-    if err != nil {
-        return err
-    }
-    defer resp.Body.Close()
-
-    if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-        return fmt.Errorf("failed to post region: %s", resp.Status)
-    }
-
-    return nil
-}
-
-func postCountryWithRegioncountryName string, regionID int) error {
+func postCountryWithRegion(countryName string, regionID string) error {
     url := fmt.Sprintf("%s/countries/addCountry", apiBaseURL)
-    jsonData := fmt.Sprintf(`{"CountryName":"%s","RegionID":%d}`, countryName, regionID)
+    jsonData := fmt.Sprintf(`{"CountryName":"%s","RegionID":"%s"}`, countryName, regionID)
     resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
     if err != nil {
         return err
@@ -237,33 +263,4 @@ func postCountryWithRegioncountryName string, regionID int) error {
     }
 
     return nil
-}
-
-//
-
-func postModelWithBrandID(modelName string, brandID string) error {
-	url := "http://api-entities:8080/models/addModel"
-
-	data := map[string]interface{}{
-		"name": modelName,
-		"brandId": brandID,
-	}
-
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("Erro ao enviar modelName: %s, StatusCode: %d", modelName, resp.StatusCode)
-	}
-
-	fmt.Printf("ModelName %s enviado com sucesso.\n", modelName)
-	return nil
 }

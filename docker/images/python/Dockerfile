@@ -13,11 +13,19 @@ RUN apk add --update nodejs npm
 RUN npm update npm -g
 RUN npm install nodemon -g
 
-# install build dependencies
-RUN apk add g++
-
 # upgrade pip
 RUN python -m pip install --upgrade pip
+
+# install uuid
+RUN pip install uuid
+
+RUN pip install lxml
+
+RUN pip install python-dotenv
+
+RUN pip install pika
+
+RUN pip install Flask-Cors
 
 # dependencies
 COPY ./requirements.txt ./
