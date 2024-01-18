@@ -20,10 +20,9 @@ model Teacher {Int
 }
 
 model country{
-  id            Int    @id
-  continent     String
-  iso_country   String
-  regions       region[]
+  id              Int    @id
+  continent       String
+  iso_country     String
 }
 
 model region{
@@ -32,7 +31,7 @@ model region{
   municipality    String
   gps_code        String
   local_code      String
-  airports        airport[]
+  countries       country[]
 }
 
 model airport{
@@ -43,5 +42,6 @@ model airport{
   elevation_ft    String
   iata_code       String
   coordinates     String
+  regions         region[]
 }
 

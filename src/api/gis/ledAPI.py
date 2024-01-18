@@ -1,10 +1,10 @@
 import json
 from urllib import request, error, parse
 
-def led(US):
+def led(CountryName):
     try:
         params = parse.urlencode({
-            'iso_country': US,
+            'iso_country': CountryName,
             'format': json
         })
         with request.urlopen(f'https://nominatim.openstreetmap.org/search?{params}') as r:

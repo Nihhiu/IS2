@@ -12,26 +12,113 @@ app.config["DEBUG"] = True
 
 
 @app.route('/api/markers', methods=['GET'])
-def get_markers():
-    args = request.args
+def get_airports():
+    ne_lat = request.args.get('neLat')
+    ne_lng = request.args.get('neLng')
+    sw_lat = request.args.get('swLat')
+    sw_lng = request.args.get('swLng')
 
-    return [
-        {
-            "type": "feature",
+
+    conn = psycopg2.connect(host='db-rel', database='is',
+                            user='is', password='is')
+    
+    cursor = conn.cursor()
+
+    # !TODO: query
+    query = ("""SELECT
+    airports.id AS airport_id,
+    airports.ident,
+    airports.type,
+    airports.name,
+    airports.elevation_ft,
+    airports.iata_code,
+    airports.coordinates,
+    regions.id AS region_id,
+    regions.iso_region,
+    regions.municipality,
+    regions.gps_code,
+    regions.local_code,
+    countries.id AS country_id,
+    countries.continent,
+    countries.iso_country
+    FROM
+        public.airports
+    INNER JOIN
+        public.regions ON airports.region = regions.id
+    INNER JOIN
+        public.countries ON regions.country = countries.id;
+    """)
+
+    if all([ne_lat, ne_lng, sw_lat, sw_lng]):
+        query += (
+            f"WHERE ST_Y(airports.coordinates::geometry) <= {ne_lat} "
+            f"AND ST_Y(airports.coordinates::geometry) >= {sw_lat} "
+            f"AND ST_X(airports.coordinates::geometry) <= {ne_lng} "
+            f"AND ST_X(airports.coordinates::geometry) >= {sw_lng}"
+        )
+
+    cursor.execute(query)
+
+    json = []
+
+
+    for row in result:
+        json_data.append({
+            "type": "Feature",
             "geometry": {
                 "type": "Point",
-                "coordinates": [41.69462, -8.84679]
+                "coordinates": [float(row[6]), float(row[7])]
             },
             "properties": {
-                "id": "7674fe6a-6c8d-47b3-9a1f-18637771e23b",
-                "name": "Ronaldo",
-                "country": "Portugal",
-                "position": "Striker",
-                "imgUrl": "https://cdn-icons-png.flaticon.com/512/805/805401.png",
-                "number": 7
+                "airport_id": str(row[0]),
+                "ident": row[1],
+                "type": row[2],
+                "name": row[3],
+                "elevation_ft": row[4],
+                "iata_code": row[5],
+                "region_id": str(row[8]),
+                "iso_region": row[9],
+                "municipality": row[10],
+                "gps_code": row[11],
+                "local_code": row[12],
+                "country_id": str(row[13]),
+                "continent": row[14],
+                "iso_country": row[15],
+                "img": "https://img.icons8.com/?size=256&id=hKWbKdldBDoa&format=png"
             }
-        }
-    ]
+        })
+
+    cursor.close()
+    conn.close()
+
+    res = make_response(jsonify(json))
+    res.headers['Access-Control-Allow-Origin'] = '*'
+    res.headers['Access-Control-Allow-Methods'] = 'GET'
+    res.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+
+    return res
+
+@app.route('/api/county/<id>', methods=['PATCH'])
+def patch_county_geo(id):
+    conn = psycopg2.connect(host='db-rel', database='is',
+                            user='is', password='is')
+    cursor = conn.cursor()
+    # cursor.execute("""SELECT name FROM counties WHERE id_county = %s """, id_string)
+    cursor.execute("SELECT name FROM counties WHERE id_county = %s", (id,))
+
+    name = cursor.fetchone()
+    print(name)
+
+    id_county = id
+
+    data = loc(name)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE counties SET geom = ST_SETSRID(ST_MAKEPOINT(%s,%s), 4326) WHERE id_county = %s",
+                   (data[0]['lon'], data[0]['lat'], id_county))
+
+    conn.commit()
+
+    return "Updated successfully"
 
 
 if __name__ == '__main__':
