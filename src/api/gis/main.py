@@ -60,14 +60,13 @@ def get_airports():
     cursor.execute(query)
 
     json = []
-
-
+    
     for row in result:
-        json_data.append({
+        json.append({
             "type": "Feature",
             "geometry": {
                 "type": "Point",
-                "coordinates": [float(row[6]), float(row[7])]
+                "coordinates": [float(row[6]), float(row[7])]  # Assuming latitude is in index 6 and longitude is in index 7
             },
             "properties": {
                 "airport_id": str(row[0]),
