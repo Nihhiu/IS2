@@ -57,7 +57,7 @@ def get_airports():
             f"AND ST_X(airports.coordinates::geometry) >= {sw_lng}"
         )
 
-    cursor.execute(query)
+    result = cursor.execute(query)
 
     json = []
     
@@ -66,7 +66,7 @@ def get_airports():
             "type": "Feature",
             "geometry": {
                 "type": "Point",
-                "coordinates": [float(row[6]), float(row[7])]  # Assuming latitude is in index 6 and longitude is in index 7
+                "coordinates": [float(row[6]), float(row[7])]
             },
             "properties": {
                 "airport_id": str(row[0]),

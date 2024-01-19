@@ -1,0 +1,44 @@
+.App-header {
+    background-color: #282c34;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: white;
+}
+
+.App {
+    display: flex;
+    min-height: 100vh;
+}
+
+.App > .Menu {
+    display: flex;
+    flex-flow: column;
+    width: 20rem;
+    min-width: 20rem;
+    max-width: 20rem;
+}
+
+.App > .Menu > .Logo {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    user-select: none;
+}
+
+.App > .Menu > .Logo > img {
+    width: 25%;
+    padding: 0.5rem;
+}
+
+.App > .Menu > .Logo > .Title {
+    font-family: "Impact";
+}
+
+.App > .Content {
+    background: lightgray;
+    width: 100%;
+}
