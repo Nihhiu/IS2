@@ -1,6 +1,6 @@
 from lxml import etree
 import psycopg2
-from database.database import Database
+from database import Database
 
 
 class Query:

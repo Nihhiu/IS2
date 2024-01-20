@@ -1,82 +1,66 @@
 import psycopg2
 
-def db_connect():
-    connection = psycopg2.connect(user="is",
-                                  password="is",
-                                  host="db-xml",
-                                  database="is")
-    return connection
+class Database:
+    def __init__(self):
+        self.connection = None
+        self.cursor = None
+        self.user = "is"
+        self.password = "is"
+        self.host = "is-db"
+        self.port = "5432"
+        self.database = "is"
 
-def cursor_connect(connection):
-    cursor = connection.cursor()
+    #Connect to the database
+    def connect(self):
+        if self.connection is None:
+            try:
+                self.connection = psycopg2.connect(
+                    user=self.user,
+                    password=self.password,
+                    host=self.host,
+                    port=self.port,
+                    database=self.database
+                )
+                self.cursor = self.connection.cursor()
+                print("\nConectada á BD")
+            except psycopg2.Error as error:
+                print(f"\nError: {error}")
 
-    return cursor
+    #Disconnect from the database
+    def disconnect(self):
+        if self.connection:
+            try:
+                self.cursor.close()
+                self.connection.close()
+                print("\nDesconectada á BD")
+            except psycopg2.Error as e:
+                print(f"\nErro: {e}")
 
-def fetch_countries():
-    try:
-        connection = db_connect()
+    #Execute the insert SQL query with the given data
+    def insert(self, sql_query, data):
+        self.connect()
+        try:
+            self.cursor.execute(sql_query, data)
+            self.connection.commit()
+            print("\nA query foi bem executada.")
+        except psycopg2.Error as error:
+            print(f"\nError: {error}")
 
-        cursor = cursor_connect(connection)
+    #Execute the select SQL query with the given data and fetch all rows
+    def selectTudo(self, query, data=None):
+        self.connect()
+        with self.cursor as cursor:
+            if data is None:
+                cursor.execute(query)
+            else:
+                cursor.execute(query, data)
+            result = [row for row in cursor.fetchall()]
+        return result
 
-        cursor.execute("""
-        SELECT DISTINCT unnest(xpath('//Countries/Country/@iso_country', xml))::text as iso_country
-        FROM imported_documents
-        ORDER BY iso_country;
-        """)
-
-        results = cursor.fetchall()
-
-        if connection:
-            cursor.close()
-            connection.close()
-
-            return results
-        
-    except (Exception, psycopg2.Error) as error:
-        print("Failed to fetch data", error)
-
-def fetch_regions():
-    try:
-        connection = db_connect()
-
-        cursor = cursor_connect(connection)
-
-        cursor.execute("""
-        SELECT DISTINCT unnest(xpath('//Regions/Region/@iso_region', xml))::text as iso_region
-        FROM imported_documents
-        ORDER BY iso_region;
-        """)
-
-        results = cursor.fetchall()
-
-        if connection:
-            cursor.close()
-            connection.close()
-
-            return results
-        
-    except (Exception, psycopg2.Error) as error:
-        print("Failed to fetch data", error)
-
-def fetch_airports():
-    try:
-        connection = db_connect()
-
-        cursor = cursor_connect(connection)
-
-        cursor.execute("""
-        SELECT DISTINCT unnest(xpath('//Airports/Airport/@ident', xml))::text as ident
-        FROM imported_documents
-        ORDER BY ident;
-        """)
-
-        results = cursor.fetchall()
-
-        if connection:
-            cursor.close()
-            connection.close()
-
-            return results
-        
-    except (Exception, psycopg2.Error) as error:
-        print("Failed to fetch data", error)
+    #Execute the select SQL query with the given data and fetch one row
+    def selectUm(self, query, data):
+        self.connect()
+        with self.cursor as cursor:
+            cursor.execute(query, data)
+            result = cursor.fetchone()
+        return result
