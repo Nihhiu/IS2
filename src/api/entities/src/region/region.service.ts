@@ -26,7 +26,7 @@ export class RegionService {
                 },
             });
         } catch (error) {
-            throw new HttpException('Failed to create airport', HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new HttpException('Failed to create region', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     
