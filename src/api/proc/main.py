@@ -17,12 +17,12 @@ def get_all_country():
     return country
 
 @app.route('/api/region/country/<iso_country>', methods=['GET'])
-def get_modelsByBrand(iso_country):
+def get_regionByCountry(iso_country):
     region = server.fetch_region_by_country(iso_country)
     return region
 
 @app.route('/api/airport/region/<iso_region>', methods=['GET'])
-def get_modelsByBrand(iso_region):
+def get_airportByRegion(iso_region):
     airport = server.fetch_airport_by_region(iso_region)
     return airport
 
