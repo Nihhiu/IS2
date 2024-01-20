@@ -46,5 +46,3 @@ model airport {
   coordinates     String
   regions         region[]
 }
-
-
