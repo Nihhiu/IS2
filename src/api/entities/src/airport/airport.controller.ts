@@ -11,11 +11,11 @@ export class AirportController {
         return this.airportService.findAll();
     }
 
-    // Get airport by ID
-    @Get(':airportId')
-    async getAirportById(@Param('airportId') airportId: string) {
+    // Get airport by Name
+    @Get(':aiportName')
+    async getAirportById(@Param('airportName') airportName: string) {
         try {
-            const airport = await this.airportService.getAirportById(airportId);
+            const airport = await this.airportService.getAirportById(airportName);
             if (!airport) {
                 throw new HttpException('Airport not found', HttpStatus.NOT_FOUND);
             }
@@ -27,7 +27,7 @@ export class AirportController {
 
     // Create a new airport
     @Post()
-    async createAirport(@Body() airportData: { airport_name: string }) {
+    async createAirport(@Body() airportData: { name: string, region_id: string }) {
         try {
             return await this.airportService.createAirport(airportData);
         } catch (error) {
