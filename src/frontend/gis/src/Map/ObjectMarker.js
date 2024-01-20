@@ -18,8 +18,7 @@ const LIST_PROPERTIES = [
     {"key": "name", label: "Name", Icon: Battery4BarIcon},
     {"key": "elevation_ft", label: "Elevation_ft", Icon: DriveEtaIcon},
     {"key": "iata_code", label: "Iata_code", Icon: SellIcon},
-    {"key": "coordinates", label: "Coordinates", Icon: LocationOnIcon},
-
+    {"key": "coordinates", label: "Coordinates", Icon: LocationOnIcon}
 ];
 
 

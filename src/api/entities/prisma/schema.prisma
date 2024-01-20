@@ -10,39 +10,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Teacher {Int
-  name       String   @id
-  city       String
-  createdOn  DateTime @default(now()) @map("created_on")
-  updatedOn  DateTime @updatedAt @map("updated_on")
+model Teacher {
+  name      String   @id
+  city      String
+  createdOn DateTime @default(now()) @map("created_on")
+  updatedOn DateTime @updatedAt @map("updated_on")
 
   @@map("teachers")
 }
 
-model country {
-  id              Int    @id
-  continent       String
-  iso_country     String
-  regions         region[] // Add this line to establish the opposite relation
+model Country {
+  id          String   @id
+  continent   String
+  iso_country String
+  Region      Region[]
 }
 
-model region {
-  id              Int   @id
-  iso_region      String
-  municipality    String
-  gps_code        String
-  local_code      String
-  countries       country[]
-  airports        airport[] // Add this line to establish the opposite relation
+model Region {
+  id           String    @id
+  iso_region   String
+  municipality String
+  gps_code     String
+  local_code   String
+  country_id   String
+  country      Country   @relation(fields: [country_id], references: [id])
+  Airport      Airport[]
 }
 
-model airport {
-  id              Int     @id
-  ident           String
-  type            String
-  name            String
-  elevation_ft    String
-  iata_code       String
-  coordinates     String
-  regions         region[]
+model Airport {
+  id           String @id
+  ident        String
+  type         String
+  name         String
+  elevation_ft String
+  iata_code    String
+  coordinates  String
+  region_id    String
+  region       Region @relation(fields: [region_id], references: [id])
 }
