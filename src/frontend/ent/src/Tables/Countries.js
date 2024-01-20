@@ -21,7 +21,7 @@ function Countries() {
     useEffect(() => {
         setData(null);
         setTimeout(() => {
-            fetch(`http://localhost:20001/cars?page=${page}`)
+            fetch(`http://localhost:20001/countries?page=${page}`)
                 .then(response => response.json())
                 .then(result => {
                     setData(result.data);

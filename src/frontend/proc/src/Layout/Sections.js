@@ -1,6 +1,6 @@
-import Brands from "../Tables/Airports";
-import ModelsByBrand from "../Tables/ModelsByBrand";
-import TopTeams from "../Tables/TopTeams";
+import Airports from "../Tables/Airports";
+import AirportsComponent from "../Tables/AirportsComponent";
+import TopAirports from "../Tables/TopAirports";
 
 const Sections = [
 
@@ -11,15 +11,15 @@ const Sections = [
     },
 
     {
-        id: "models-by-brand",
-        label: "Models by Brand",
-        content: <ModelsByBrand/>
+        id: "airports-component",
+        label: "Airports Component",
+        content: <AirportsComponent/>
     },
 
     {
-        id: "top-teams",
-        label: "Top Teams",
-        content: <TopTeams/>
+        id: "top-airport",
+        label: "Top Airports",
+        content: <TopAirports/>
     },
 
 ];

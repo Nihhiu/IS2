@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS POSTGIS_TOPOLOGY;
 CREATE TABLE public.countries (
     id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     continent       VARCHAR(100) NOT NULL,
-    iso_country     VARCHAR(3) NOT NULL,
+    iso_country     VARCHAR(3) UNIQUE NOT NULL,
     created_on      TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_on      TIMESTAMP NOT NULL DEFAULT NOW()
 );

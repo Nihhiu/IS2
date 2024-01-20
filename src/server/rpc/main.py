@@ -34,7 +34,8 @@ if __name__ == "__main__":
         server.register_function(query_functions.fetch_country)
         server.register_function(query_functions.fetch_region_by_country)
         server.register_function(query_functions.fetch_airport_by_region)
-        server.register_function(query_functions.fetch_with_filters)
+        server.register_function(query_functions.fetch_airport_higest)
+        server.register_function(query_functions.fetch_airport_lowest)
 
         # register both functions
         server.register_function(string_reverse)

@@ -13,23 +13,27 @@ server = xmlrpc.client.ServerProxy("http://rpc-server:9000")
 
 @app.route('/api/country', methods=['GET'])
 def get_all_country():
-    iso_country = server.fetch_country()
-    return iso_country
+    country = server.fetch_country()
+    return country
 
 @app.route('/api/region/country/<iso_country>', methods=['GET'])
 def get_modelsByBrand(iso_country):
-    iso_region = server.fetch_region_by_country(iso_country)
-    return iso_region
+    region = server.fetch_region_by_country(iso_country)
+    return region
 
 @app.route('/api/airport/region/<iso_region>', methods=['GET'])
 def get_modelsByBrand(iso_region):
     airport = server.fetch_airport_by_region(iso_region)
     return airport
 
-@app.route('/api/airport/filtred/<order_by>/<ascending>', methods=['GET'])
-def get_airportFiltred(order_by, ascending):
-    ascending = ascending.lower() == 'asc'
-    airport = server.fetch_with_filters(order_by, ascending)
+@app.route('/api/airport/highest', methods=['GET'])
+def get_airportHighest():
+    airport = server.fetch_airport_higest()
+    return airport
+
+@app.route('/api/airport/lowest', methods=['GET'])
+def get_airportLowest():
+    airport = server.fetch_airport_lowest()
     return airport
 
 if __name__ == '__main__':

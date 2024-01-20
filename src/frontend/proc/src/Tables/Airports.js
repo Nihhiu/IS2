@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@mui/material";
 
-function Brands() {
+function Airports() {
   const [page] = useState(1);
   const [data, setData] = useState(null);
   const [setMaxDataSize] = useState(0);
@@ -18,7 +18,7 @@ function Brands() {
   useEffect(() => {
     setData(null);
     setTimeout(() => {
-      fetch(`http://localhost:20004/api/brands`)
+      fetch(`http://localhost:20004/api/country`)
         .then((response) => response.json())
         .then((result) => {
           setData(result);
@@ -44,7 +44,7 @@ function Brands() {
           </TableHead>
           <TableBody>
             {data ? (
-              data.map((brand, index) => (
+              data.map((airport, index) => (
                 <TableRow
                   key={index}
                   style={{ background: "black", color: "black" }}
@@ -53,7 +53,7 @@ function Brands() {
                     {index + 1}
                   </TableCell>
                   <TableCell component="td" scope="row">
-                    {brand}
+                    {airport}
                   </TableCell>
                 </TableRow>
               ))
@@ -71,4 +71,4 @@ function Brands() {
   );
 }
 
-export default Airport;
+export default Airports;

@@ -21,7 +21,7 @@ function Airports() {
     useEffect(() => {
         setData(null);
         setTimeout(() => {
-            fetch(`http://localhost:20001/brands?page=${page}`)
+            fetch(`http://localhost:20001/airports?page=${page}`)
                 .then(response => response.json())
                 .then(result => {
                     setData(result.data);

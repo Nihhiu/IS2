@@ -3,7 +3,7 @@ import csv
 import xml.dom.minidom as md
 import xml.etree.ElementTree as ET
 
-from reader import CSVReader
+from importer.utils.reader import CSVReader
 from importer.entities.country import Country
 from importer.entities.region import Region
 from importer.entities.airport import Airport

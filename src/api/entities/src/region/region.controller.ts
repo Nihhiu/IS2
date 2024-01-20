@@ -1,68 +1,37 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, HttpStatus, HttpException, Param } from '@nestjs/common';
 import { RegionService } from './region.service';
 
 @Controller('region')
 export class RegionController {
     constructor(private readonly regionService: RegionService) {}
 
+    // Get all regions
     @Get()
-    async getAllRegion(@Query('page') page: number = 1, @Query('pageSize') pageSize: number = 10) {
-      return this.regionService.getAllRegion(page, pageSize);
+    async findAll() {
+        return this.regionService.findAll();
     }
 
-    @Get('/statistics')
-  async getRegionStatistics(@Query('year') year: number): Promise<any> {
-    try {
-      const statistics = await this.regionService.getRegionDetails(year);
-      return { success: true, data: statistics };
-    } catch (error) {
-      return { success: false, error: error.message };
+    // Get region by ID
+    @Get(':regionId')
+    async getRegionById(@Param('regionId') regionId: string) {
+        try {
+            const region = await this.regionService.getRegionById(regionId);
+            if (!region) {
+                throw new HttpException('Region not found', HttpStatus.NOT_FOUND);
+            }
+            return region;
+        } catch (error) {
+            throw new HttpException('Failed to fetch region', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-  }
 
-  @Get('/filtered')
-  async getFilteredRegion(
-    @Query('id') id: number,
-    @Query('iso_region') iso_region: number,
-    @Query('municipality') municipality: number,
-    @Query('gps_code') gps_code: number,
-    @Query('local_code') local_code: number,
-  ): Promise<any> {
-    try {
-      const filteredRegion = await this.regionService.getFilteredRegion({
-        id,
-        iso_region,
-        municipality,
-        gps_code,
-        local_code
-      });
-      return { success: true, data: filteredRegion };
-    } catch (error) {
-      return { success: false, error: error.message };
+    // Create a new region
+    @Post()
+    async createRegion(@Body() regionData: { region_name: string }) {
+        try {
+            return await this.regionService.createRegion(regionData);
+        } catch (error) {
+            throw new HttpException('Failed to create region', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-  }
-
-  @Get('/paged')
-  async getPagedRegion(
-    // TODO ver o que fica em modelYear
-    @Query('modelYear', ParseIntPipe) modelYear: number,
-    @Query('page', ParseIntPipe) page: number,
-    @Query('pageSize', ParseIntPipe) pageSize: number,
-    @Query('orderBy') orderBy: string,
-  ): Promise<any> {
-    try {
-      const pagedRegion = await this.regionService.getPagedRegion({
-        modelYear,
-        page,
-        pageSize,
-        orderBy,
-      });
-      return { success: true, data: pagedRegion };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
-  }
-
 }
-
-
