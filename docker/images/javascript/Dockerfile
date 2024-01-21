@@ -7,4 +7,4 @@ RUN npm update npm -g
 RUN npm install nodemon -g
 RUN npm install knex -g
 
-CMD (sed -i 's/\r$//' ./run.sh) ; (chmod +x ./run.sh) ; ./run.sh
+CMD sed -i 's/\r$//' ./run.sh && chmod +x ./run.sh && ./run.sh

@@ -10,4 +10,4 @@ RUN apk add --update nodejs npm
 RUN npm update npm -g
 RUN npm install nodemon -g
 
-ENTRYPOINT (sed -i 's/\r$//' ./run.sh) ; (chmod +x ./run.sh) ; ./run.sh
+ENTRYPOINT sed -i 's/\r$//' ./run.sh && chmod +x ./run.sh && ./run.sh
