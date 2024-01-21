@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.config["DEBUG"] = True
 
 
-@app.route('/api/markers', methods=['GET'])
+@app.route('/airports', methods=['GET'])
 def get_airports():
     ne_lat = request.args.get('neLat')
     ne_lng = request.args.get('neLng')
@@ -77,7 +77,7 @@ def get_airports():
 
     return res
 
-@app.route('/api/airport/<id>', methods=['PATCH'])
+@app.route('/airport/<id>', methods=['PATCH'])
 def patch_airport_geo(id):
     conn = psycopg2.connect(host='db-rel', database='is',
                             user='is', password='is')
