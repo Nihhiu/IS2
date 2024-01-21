@@ -10,27 +10,35 @@ import {
 } from "@mui/material";
 
 const DEMO_AIRPORTS = [
-
+  {
+    id: "111",
+    ident: "01PN",
+    type: "small_airport",
+    name: "Bierly(Personal Use) Airport",
+    elevation_ft: "960",
+    iata_code: "",
+    coordinates: "-77.73889923095703, 40.930599212646484"
+  }
   ];
 
   function AirportsComponent() {
-    const [selectedRegion, setSelectedRegion] = useState("");
+    const [selectedCountry, setSelectedCountry] = useState("");
     const [page] = useState(1);
     const [procData, setProcData] = useState(null);
     const [gqlData, setGQLData] = useState(null);
-    const [REGIONS, setREGIONS] = useState([]);
+    const [COUNTRY, setCOUNTRY] = useState([]);
   
     useEffect(() => {
       // Simulating data retrieval from the server
-      setREGIONS([]);
+      setCOUNTRY([]);
       setTimeout(() => {
-        // Fetch data from the regions API endpoint
-        fetch(`http://localhost:20004/api/regions`)
+        // Fetch data from the country API endpoint
+        fetch(`http://localhost:20004/api/country`)
           .then((response) => response.json())
           .then((result) => {
             // Update the state with the received data
-            console.log("Regions Data:", result);
-            setREGIONS(result);
+            console.log("Country Data:", result);
+            setCOUNTRY(result);
           })
           .catch((error) => console.error("Error fetching data:", error));
       }, 500);
@@ -40,25 +48,25 @@ const DEMO_AIRPORTS = [
         setProcData(null);
         setGQLData(null);
     
-        if (selectedRegion) {
-          fetch(`http://localhost:20004/api/airports/region/${selectedRegion}`)
+        if (selectedCountry) {
+          fetch(`http://localhost:20004/api/regions/country/${selectedCountry}`)
             .then((response) => response.json())
             .then((result) => {
               setProcData(result.map(airport => airport.name));
               setTimeout(() => {
                 console.log(`fetching from ${process.env.REACT_APP_API_GRAPHQL_URL}`);
                 setGQLData(
-                  result.length > 0 ? result : DEMO_AIRPORTS.filter((a) => a.region === selectedRegion)
+                  result.length > 0 ? result : DEMO_AIRPORTS.filter((a) => a.region === selectedCountry)
                 );
               }, 1000);
             })
             .catch((error) => console.error("Error fetching data:", error));
         }
-      }, [selectedRegion]);
+      }, [selectedCountry]);
     
       return (
         <>
-          <h1>Airports by Region</h1>
+          <h1>Airports by Country</h1>
     
           <Container
             maxWidth="100%"
@@ -71,22 +79,22 @@ const DEMO_AIRPORTS = [
             <Box>
               <h2 style={{ color: "white" }}>Options</h2>
               <FormControl fullWidth>
-                <InputLabel id="regions-select-label">Region</InputLabel>
+                <InputLabel id="country-select-label">Country</InputLabel>
                 <Select
-                  labelId="regions-select-label"
+                  labelId="country-select-label"
                   id="demo-simple-select"
-                  value={selectedRegion}
-                  label="Region"
+                  value={selectedCountry}
+                  label="Country"
                   onChange={(e) => {
-                    setSelectedRegion(e.target.value);
+                    setSelectedCountry(e.target.value);
                   }}
                 >
                   <MenuItem value={""}>
                     <em>None</em>
                   </MenuItem>
-                  {REGIONS.map((region) => (
-                    <MenuItem key={region.id} value={region.id}>
-                      {region.name}
+                  {COUNTRY.map((country) => (
+                    <MenuItem key={country} value={country.id}>
+                      {country.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -107,11 +115,11 @@ const DEMO_AIRPORTS = [
             <h2>Results <small>(PROC)</small></h2>
             {procData ? (
               <ul>
-                {procData.map((airport) => (
-                  <li key={airport}>{airport}</li>
+                {procData.map((regions) => (
+                  <li key={regions}>{regions}</li>
                 ))}
               </ul>
-            ) : selectedRegion ? (
+            ) : selectedCountry ? (
               <CircularProgress />
             ) : (
               "--"
@@ -123,7 +131,7 @@ const DEMO_AIRPORTS = [
                   <li key={data.id}>{data.name}</li>
                 ))}
               </ul>
-            ) : selectedRegion ? (
+            ) : selectedCountry ? (
               <CircularProgress />
             ) : (
               "--"

@@ -97,23 +97,22 @@ def get_airports():
 
     return res
 
-@app.route('/api/county/<id>', methods=['PATCH'])
+@app.route('/api/airport/<id>', methods=['PATCH'])
 def patch_county_geo(id):
     conn = psycopg2.connect(host='db-rel', database='is',
                             user='is', password='is')
     cursor = conn.cursor()
-    # cursor.execute("""SELECT name FROM counties WHERE id_county = %s """, id_string)
-    cursor.execute("SELECT name FROM counties WHERE id_county = %s", (id,))
+    cursor.execute("SELECT name FROM airport WHERE id = %s", (id,))
 
     name = cursor.fetchone()
     print(name)
 
-    id_county = id
+    id_airport = id
 
     data = loc(name)
     cursor = conn.cursor()
-    cursor.execute("UPDATE counties SET geom = ST_SETSRID(ST_MAKEPOINT(%s,%s), 4326) WHERE id_county = %s",
-                   (data[0]['lon'], data[0]['lat'], id_county))
+    cursor.execute("UPDATE airport SET coordinates = ST_SETSRID(ST_MAKEPOINT(%s,%s), 4326) WHERE id = %s",
+                   (data[0]['lon'], data[0]['lat'], id_airport))
 
     conn.commit()
 

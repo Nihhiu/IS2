@@ -1,3 +1,5 @@
+#!/bin/bash
+
 OUTPUT_BIN="main"
 
 # Check if not in dev mode

@@ -1,266 +1,255 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
+	"database/sql"
+	"encoding/xml"
 	"fmt"
 	"net/http"
 	"log"
 	"time"
 
+	"github.com/antchfx/xmlquery"
 	_ "github.com/lib/pq"
 	"github.com/streadway/amqp"
+	"github.com/go-resty/resty/v2"
 )
-
-const (
-	host_org   = "db-xml"
-	host_dst   = "db-rel"
-	queueBrandsModels  = "migrator_brands_models_queue"
-	user       = "is"
-	password   = "is"
-	dbname     = "is"
-	port       = 5432
-)
-
-type Message struct {
-	CountryName string `json:"CountryName"`
-	RegionName  string `json:"RegionName"`
-	AiportName  string `json:"AirportName"`
-}
 
 type Country struct {
-	CountryName string `json:"CountryName"`
+	XMLName xml.Name `xml:"country"`
+	Id      string   `xml:"id,attr"`
+	Name    string   `xml:"iso_country,chardata"`
 }
 
 type Region struct {
-	RegionName string `json:"RegionName"`
-	CountryID  string `json:"CountryID"`
+	XMLName xml.Name `xml:"region"`
+	Id      string   `xml:"id,attr"`
+	Name    string   `xml:"iso_region,attr"`
 }
-
 type Airport struct {
-	AirportName string `json:"AirportName"`
-	RegionID    string `json:"RegionID"`
+    XMLName   xml.Name `xml:"airport"`
+    Id        string   `xml:"id,attr"`
+    Name      string   `xml:"name,attr"`
 }
 
-
-
+const (
+	apiCountry = "http://api-entities:8080/country"
+	apiRegion     = "http://api-entities:8080/region"
+	apiAirport = "http://api-entities:8080/airport"
+)
 
 func main() {
-	conn, err := amqp.Dial("amqp://is:is@broker:5672/is")
+	connectionString := "postgres://is:is@db-xml/is?sslmode=disable"
+
+	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
 		log.Fatal(err)
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatal("Erro ao conectar ao base de dados:", err)
+	}
+
+	fmt.Println("Conexão com o base de dados estabelecida com sucesso!")
+
+	conn, err := amqp.Dial("amqp://is:is@broker:5672/is")
+	if err != nil {
+		log.Fatalf("Erro ao conectar ao servidor RabbitMQ: %s", err)
 	}
 	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Erro ao abrir o canal: %s", err)
 	}
 	defer ch.Close()
 
-	_, err = ch.QueueDeclare(
-		queueBrandsModels, 
-		true,      
-		false,     
-		false,     
-		false,    
-		nil,       
-	)
+	// Consume mensagens da fila que já foi declarada pelo watcher
+	msgs, err := ch.Consume("menssagem", "", true, false, false, false, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Erro ao consumir mensagens: %s", err)
 	}
 
-	msgs, err := ch.Consume(
-		queueBrandsModels,
-		"",        
-		true,      
-		false,     
-		false,     
-		false,    
-		nil,       
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
+	for msg := range msgs {
+		fileName := string(msg.Body)
 
-	var receivedMessages []Message
-	var messagesProcessed bool
+		fmt.Printf("Nome do arquivo do XML recebido: %s\n", fileName)
 
-	for {
-		select {
-		case msg, ok := <-msgs:
-			if !ok {
-				fmt.Println("No messages in the queue. Exiting...")
-				break
-			}
-		 
-			var receivedMessage Message
-			err := json.Unmarshal(msg.Body, &receivedMessage)
-			if err != nil {
-				log.Println("Error unmarshalling message body:", err)
-				continue
-			}
-	
-			originalJSON, err := json.Marshal(receivedMessage)
-			if err != nil {
-				log.Println("Error marshalling original message to JSON:", err)
-				continue
-			}
-	
-			fmt.Println("Received a message:", string(originalJSON))
-			receivedMessages = append(receivedMessages, receivedMessage)
-	
-		case <-time.After(10 * time.Second):
-			if len(receivedMessages) > 0 && !messagesProcessed {
-				messagesProcessed = true
-				fmt.Println("Messages processed. Exiting...")
-	
-				airportsByRegion := make(map[string][]Message)
-				regionsByCountry := make(map[string][]Message)
+		xmlQuery := "SELECT xml FROM public.imported_documents WHERE file_name = $1"
 
-				for _, msg := range receivedMessages {
-					airportsByRegion[msg.CountryName+"_"+msg.RegionName] = append(airportsByRegion[msg.CountryName+"_"+msg.RegionName], msg)
-					regionsByCountry[msg.CountryName] = append(regionsByCountry[msg.CountryName], msg)
-				}
-				
-				// Create countries
-				for countryName := range regionsByCountry {
-					countryID, err := postCountryName(countryName)
-					if err != nil {
-						log.Println("Error posting country:", err)
-						continue
-					}
-
-					// Create regions within countries
-					for _, region := range regionsByCountry[countryName] {
-						regionID, err := postRegionName(region.RegionName, countryID)
-						if err != nil {
-							log.Println("Error posting region:", err)
-							continue
-						}
-
-						// Create airports within regions
-						for _, airport := range airportsByRegion[countryName+"_"+region.RegionName] {
-							err := postAirportName(airport.AiportName, regionID)
-							if err != nil {
-								log.Println("Error posting airport:", err)
-								continue
-							}
-						}
-					}
-				}
-			
-			} else {
-				fmt.Println("No messages received for 10 seconds. Exiting...")		
-			}
+		var xmlData string
+		err := db.QueryRow(xmlQuery, fileName).Scan(&xmlData)
+		if err != nil {
+			log.Fatalf("Erro ao buscar XML do base de dados: %s", err)
 		}
+
+		doc, err := xmlquery.Parse(strings.NewReader(xmlData))
+		if err != nil {
+			log.Fatalf("Erro ao analisar o XML: %s", err)
+		}
+
+		// Processar country e enviar
+		processCountry(doc)
+		// Processar region e enviar
+		processRegion(doc)
+		// Processar airport e enviar
+		processAirport(doc)
 	}
 }
 
+// Country
 
-func postCountryName(countryName string) (string, error) {
-	url := fmt.Sprintf("%s/countries/addCountry", apiBaseURL)
-	jsonData := fmt.Sprintf(`{"CountryName":"%s"}`, countryName)
-	resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
+func processCountry(doc *xmlquery.Node) {
+	nodes := xmlquery.Find(doc, "//Countries/Country")
+
+	var countries []Country
+
+	for _, node := range nodes {
+		country := Country{
+			iso_country: node.SelectAttr("iso_country"),
+		}
+		countries = append(countries, country)
+	}
+
+	// Apresentar todos os paises
+	fmt.Println("Países encontrados:")
+	for _, c := range countries {
+		fmt.Printf(" Nome: %s\n", c.iso_country)
+	}
+
+	err := envCountry(countries)
 	if err != nil {
-		return "", err
+		log.Fatalf("Erro ao enviar países para a API: %s", err)
 	}
-	defer resp.Body.Close()
-
-	var result struct {
-		CountryID string `json:"CountryID"`
-	}
-
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return "", fmt.Errorf("failed to post country: %s", resp.Status)
-	}
-
-	return result.CountryID, nil
 }
 
-func postRegionName(regionName string, countryID string) (string, error) {
-	url := fmt.Sprintf("%s/regions/addRegion", apiBaseURL)
-	jsonData := fmt.Sprintf(`{"RegionName":"%s","CountryID":"%s"}`, regionName, countryID)
-	resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
+func envCountry(countries []Country) error {
+	client := resty.New()
 
-	var result struct {
-		RegionID string `json:"RegionID"`
-	}
+	for _, country := range countries {
+		// Ajustar para o formato JSON
+		resp, err := client.R().
+			SetHeader("Content-Type", "application/json").
+			SetBody(map[string]string{
+				"iso_country": country.iso_country,
+			}).
+			Post(apiCountry)
 
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return "", err
-	}
+		if err != nil {
+			return fmt.Errorf("Erro ao enviar país para a API: %s", err)
+		}
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return "", fmt.Errorf("failed to post region: %s", resp.Status)
-	}
+		if resp.StatusCode() != 201 {
+			return fmt.Errorf("Erro ao enviar país para a API. %d", resp.StatusCode())
+		}
 
-	return result.RegionID, nil
-}
-
-func postAirportName(airportName string, regionID string) error {
-	url := fmt.Sprintf("%s/airports/addAirport", apiBaseURL)
-	jsonData := fmt.Sprintf(`{"AirportName":"%s","RegionID":"%s"}`, airportName, regionID)
-	resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("failed to post airport: %s", resp.Status)
+		fmt.Printf("País enviado para a API. Nome: %s\n", country.iso_country)
 	}
 
 	return nil
 }
 
-func postRegionWithAirport(regionName, countryID string) (string, error) {
-    url := fmt.Sprintf("%s/regions/addRegion", apiBaseURL)
-    jsonData := fmt.Sprintf(`{"RegionName":"%s","CountryID":"%s"}`, regionName, countryID)
-    resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
-    if err != nil {
-        return "", err
-    }
-    defer resp.Body.Close()
+// Region
 
-    var result struct {
-        RegionID string `json:"RegionID"`
-    }
+func processRegion(doc *xmlquery.Node) {
+	nodes := xmlquery.Find(doc, "//Regions/Region")
 
-    err = json.NewDecoder(resp.Body).Decode(&result)
-    if err != nil {
-        return "", err
-    }
+	var regions []Region
 
-    if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-        return "", fmt.Errorf("failed to post region: %s", resp.Status)
-    }
+	for _, node := range nodes {
+		region := Region{
+			iso_region: node.SelectAttr("iso_region"),
+		}
+		regions = append(regions, region)
+	}
 
-    return result.RegionID, nil
+	// Apresentar todos os paises
+	fmt.Println("Países encontrados:")
+	for _, c := range regions {
+		fmt.Printf(" Nome: %s\n", c.iso_region)
+	}
+
+	err := envRegion(regions)
+	if err != nil {
+		log.Fatalf("Erro ao enviar regiões para a API: %s", err)
+	}
 }
 
-func postCountryWithRegion(countryName string, regionID string) error {
-    url := fmt.Sprintf("%s/countries/addCountry", apiBaseURL)
-    jsonData := fmt.Sprintf(`{"CountryName":"%s","RegionID":"%s"}`, countryName, regionID)
-    resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
-    if err != nil {
-        return err
-    }
-    defer resp.Body.Close()
+func envRegion(regions []Region) error {
+	client := resty.New()
 
-    if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-        return fmt.Errorf("failed to post country: %s", resp.Status)
-    }
+	for _, region := range regions {
+		// Ajustar para o formato JSON
+		resp, err := client.R().
+			SetHeader("Content-Type", "application/json").
+			SetBody(map[string]string{
+				"iso_region": region.iso_region,
+			}).
+			Post(apiRegion)
 
-    return nil
+		if err != nil {
+			return fmt.Errorf("Erro ao enviar região para a API: %s", err)
+		}
+
+		if resp.StatusCode() != 201 {
+			return fmt.Errorf("Erro ao enviar região para a API. %d", resp.StatusCode())
+		}
+
+		fmt.Printf("Região enviado para a API. Nome: %s\n", region.iso_region)
+	}
+
+	return nil
+}
+
+// Airport
+
+func processAirport(doc *xmlquery.Node) {
+	nodes := xmlquery.Find(doc, "//Airports/Airport")
+
+	var airports []Airport
+
+	for _, node := range nodes {
+		airport := Airport{
+			name: node.SelectAttr("name"),
+		}
+		airports = append(airports, airport)
+	}
+
+	// Apresentar todos os paises
+	fmt.Println("Países encontrados:")
+	for _, c := range airports {
+		fmt.Printf(" Nome: %s\n", c.name)
+	}
+
+	err := envAirport(airports)
+	if err != nil {
+		log.Fatalf("Erro ao enviar aeroportos para a API: %s", err)
+	}
+}
+
+func envAirport(airports []Airport) error {
+	client := resty.New()
+
+	for _, airport := range airports {
+		// Ajustar para o formato JSON
+		resp, err := client.R().
+			SetHeader("Content-Type", "application/json").
+			SetBody(map[string]string{
+				"name": airport.name,
+			}).
+			Post(apiAirport)
+
+		if err != nil {
+			return fmt.Errorf("Erro ao enviar aeroporto para a API: %s", err)
+		}
+
+		if resp.StatusCode() != 201 {
+			return fmt.Errorf("Erro ao enviar aeroporto para a API. %d", resp.StatusCode())
+		}
+
+		fmt.Printf("Aeroporto enviado para a API. Nome: %s\n", airport.name)
+	}
+
+	return nil
 }
