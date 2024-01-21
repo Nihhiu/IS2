@@ -1,5 +1,5 @@
 import psycopg2
-from database import Database
+from functions.database import Database
 
 
 class Query:
@@ -8,8 +8,10 @@ class Query:
 
     def _execute_query(self, query, data):
         database = Database()
+
         try:
             result = database.selectOne(query, data)
+            
             return result
         finally:
             pass

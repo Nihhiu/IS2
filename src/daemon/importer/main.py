@@ -6,7 +6,7 @@ import uuid
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileCreatedEvent
 
-from utils.csv_to_xml_converter import CSVtoXMLConverter
+from utils.to_xml_converter import CSVtoXMLConverter
 from utils.database import Database
 
 # Caminhos para introduzir ficheiros CSV e sair ficheiros XML
