@@ -48,7 +48,7 @@ class Query:
         WHERE
             xpath('//Country[@iso_country="{}"]', xml) IS NOT NULL
         ORDER BY
-            player_name;
+            iso_region;
         """.format(iso_country, iso_country)
 
         results = database.selectAll(query)
@@ -83,7 +83,7 @@ class Query:
         WHERE
             xpath('//Region[@iso_region="{}"]', xml) IS NOT NULL
         ORDER BY
-            player_name;
+            name;
         """.format(iso_region, iso_region)
 
         results = database.selectAll(query)

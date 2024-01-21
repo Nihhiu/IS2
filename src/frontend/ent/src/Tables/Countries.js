@@ -49,8 +49,8 @@ function Countries() {
                         {
                             data ?
                                 data.map((row) => (
-                                    <TableRow key={row.id_brand} style={{background: "black", color: "black"}}>
-                                        <TableCell component="td" align="center">{row.id_country}</TableCell>
+                                    <TableRow key={row.id} style={{background: "black", color: "black"}}>
+                                        <TableCell component="td" align="center">{row.id}</TableCell>
                                         <TableCell component="td" scope="row">{row.iso_country}</TableCell>
                                         <TableCell component="td" scope="row">{row.continent}</TableCell>
                                     </TableRow>

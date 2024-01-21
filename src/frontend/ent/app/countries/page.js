@@ -23,7 +23,7 @@ export default function CountriesPage() {
       <b>Countries Page</b>: 
       <ul>
         {countries.map((country) => (
-          <li key={country.id}>{country.country_name}</li> 
+          <li key={country.id}>{country.iso_country}</li> 
         ))}
       </ul>
     </main>

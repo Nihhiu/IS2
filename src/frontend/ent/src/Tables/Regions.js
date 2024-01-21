@@ -52,10 +52,10 @@ function Regions() {
                                 data.map((row) => (
                                     console.log('Row Data:', row),
                                     <TableRow
-                                        key={row.id_county}
+                                        key={row.id}
                                         style={{background: "black"}}
                                     >
-                                        <TableCell component="td" align="center">{row.id_region}</TableCell>
+                                        <TableCell component="td" align="center">{row.id}</TableCell>
                                         <TableCell component="td" scope="row">{row.iso_region}</TableCell>
                                         <TableCell component="td" scope="row">{row.municipality}</TableCell>
                                         <TableCell component="td" scope="row">{row.gps_code}</TableCell>

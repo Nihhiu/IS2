@@ -42,9 +42,9 @@ export function ObjectMarker({geoJSON}) {
                 <List dense={true}>
                     <ListItem>
                         <ListItemIcon>
-                            <Avatar alt={country_name + " " + region_name} src={img}/>
+                            <Avatar alt={iso_country + " " + iso_region} src={img}/>
                         </ListItemIcon>
-                        <ListItemText primary={country_name + " " + region_name}/>
+                        <ListItemText primary={iso_country + " " + iso_region}/>
                     </ListItem>
                     {
                         LIST_PROPERTIES

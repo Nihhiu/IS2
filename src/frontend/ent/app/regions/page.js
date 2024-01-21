@@ -2,28 +2,28 @@
 import React, { useEffect, useState } from 'react';
 import crudAPI from '../crud/crudAPI';
 
-export default function ClubsPage() {
-  const [clubs, setClubs] = useState([]);
+export default function RegionPage() {
+  const [region, setRegions] = useState([]);
 
   useEffect(() => {
-    const fetchClubs = async () => {
+    const fetchRegions = async () => {
       try {
-        const response = await crudAPI().GET('/club'); 
-        setClubs(response.data); 
+        const response = await crudAPI().GET('/region'); 
+        setRegions(response.data); 
       } catch (error) {
-        console.error('Erro ao buscar clubes:', error);
+        console.error('Erro ao buscar regiões:', error);
       }
     };
 
-    fetchClubs();
+    fetchRegions();
   }, []);
 
   return (
     <main>
       <b>Countries Page</b>: 
       <ul>
-        {clubs.map((region) => (
-          <li key={region.id}>{region.region_name}</li> 
+        {region.map((region) => (
+          <li key={region.id}>{region.iso_region}</li> 
         ))}
       </ul>
     </main>

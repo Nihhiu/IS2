@@ -98,7 +98,7 @@ def get_airports():
     return res
 
 @app.route('/api/airport/<id>', methods=['PATCH'])
-def patch_county_geo(id):
+def patch_airport_geo(id):
     conn = psycopg2.connect(host='db-rel', database='is',
                             user='is', password='is')
     cursor = conn.cursor()
