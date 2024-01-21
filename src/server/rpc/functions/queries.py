@@ -1,4 +1,3 @@
-from lxml import etree
 import psycopg2
 from database import Database
 
