@@ -22,7 +22,7 @@ class Query:
         query = """
         SELECT DISTINCT unnest(xpath('//AirportCode/Countries/Country/@iso_country', xml))::text as country
         FROM imported_documents
-        ORDER BY iso_country
+        ORDER BY country
         """
 
         results = database.selectAll(query)
@@ -45,10 +45,10 @@ class Query:
         results = database.selectAll(query)
         database.disconnect()
 
-        formatted_country = [country[0] for country in results]
+        formatted_region = [region[0] for region in results]
 
 
-        return formatted_country
+        return formatted_region
     
     def fetch_airport(self):
         database = Database()
@@ -62,10 +62,10 @@ class Query:
         results = database.selectAll(query)
         database.disconnect()
 
-        formatted_country = [country[0] for country in results]
+        formatted_airport = [airport[0] for airport in results]
 
 
-        return formatted_country
+        return formatted_airport
 
     @staticmethod
     def fetch_region_by_country(iso_country):
