@@ -65,6 +65,18 @@ class Database:
         except psycopg2.Error as error:
             # Handle selection errors
             print(f"\nError: {error}")
+    
+    #  Connect to the database
+    def selectTudo(self, query, data=None):
+        self.connect()
+        # Execute the SQL query and fetch the result
+        with self.cursor as cursor:
+            if data is None:
+                cursor.execute(query)
+            else:
+                cursor.execute(query, data)
+            result = [row for row in cursor.fetchall()]
+        return result
 
     # Connect to the database
     def insert_many(self, sql_query, data_list):

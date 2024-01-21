@@ -3,10 +3,10 @@ import csv
 import xml.dom.minidom as md
 import xml.etree.ElementTree as ET
 
-from importer.utils.reader import CSVReader
-from importer.entities.country import Country
-from importer.entities.region import Region
-from importer.entities.airport import Airport
+from utils.reader import CSVReader
+from entities.country import Country
+from entities.region import Region
+from entities.airport import Airport
 
 class CSVtoXMLConverter:
 
@@ -74,16 +74,8 @@ class CSVtoXMLConverter:
         return root_el
 
     def to_xml_str(self):
-        """
-        This method converts the XML structure into a string.
-        """
         xml_str = ET.tostring(self.to_xml(), encoding='utf8', method='xml').decode()
         dom = md.parseString(xml_str)
-        pretty_xml_str = dom.toprettyxml()
-
-        with open("/data/xml.xml", 'w', encoding='utf-8') as xml_file:
-            xml_file.write(dom.toprettyxml(indent='\t'))
-
         return dom.toprettyxml()
 #
 # This code converts a CSV file into an XML file. It reads the CSV file using the `CSVReader` class and creates the corresponding entities (Country, Region, and Airport) using the provided builders.

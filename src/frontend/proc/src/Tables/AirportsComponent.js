@@ -49,7 +49,7 @@ const DEMO_AIRPORTS = [
         setGQLData(null);
     
         if (selectedCountry) {
-          fetch(`http://localhost:20004/api/regions/country/${selectedCountry}`)
+          fetch(`http://localhost:20004/api/region/country/${selectedCountry}`)
             .then((response) => response.json())
             .then((result) => {
               setProcData(result.map(airport => airport.name));

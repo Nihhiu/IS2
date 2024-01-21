@@ -9,18 +9,19 @@ export class RegionService {
         return this.prisma.region.findMany();
     }
 
-    async createRegion(regionData: { iso_region: string, country_id: string }): Promise<any> {
+    async createRegion(regionData: {id: string, iso_region: string, country_id: string}): Promise<any> {
         try {
-            const country = await this.prisma.region.findFirst({
+            const country = await this.prisma.country.findFirst({
                 where: { id: regionData.country_id },
             });
     
             if (!country) {
-                throw new HttpException(`Region with ID ${regionData.country_id} not found`, HttpStatus.NOT_FOUND);
+                throw new HttpException(`Country with ID ${regionData.country_id} not found`, HttpStatus.NOT_FOUND);
             }
     
-            return await this.prisma.airport.create({
+            return await this.prisma.region.create({
                 data: {
+                    id: regionData.id,
                     iso_region: regionData.iso_region,
                     country: { connect: { id: country.id } },
                 },
@@ -29,7 +30,6 @@ export class RegionService {
             throw new HttpException('Failed to create region', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    
     
     async getRegionById(regionId: string): Promise<any> {
         return this.prisma.region.findUnique({ where: { id: regionId } });

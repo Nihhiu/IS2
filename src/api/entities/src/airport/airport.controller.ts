@@ -27,7 +27,7 @@ export class AirportController {
 
     // Create a new airport
     @Post()
-    async createAirport(@Body() airportData: { name: string, region_id: string }) {
+    async createAirport(@Body() airportData: {id: string, name: string, region_id: string }) {
         try {
             return await this.airportService.createAirport(airportData);
         } catch (error) {

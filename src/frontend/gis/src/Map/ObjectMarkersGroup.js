@@ -39,7 +39,7 @@ function ObjectMarkersGroup() {
     }, [bounds, geom])
 
     const  asyncFetch = async () => {
-        await axios.get("http://localhost:20002/api/airports")
+        await axios.get("http://localhost:20002/api/airport")
             .then((response) => {
                 setGeom(response.data)
             })

@@ -13,7 +13,7 @@ export class CountryController {
 
     // Create a new country
     @Post()
-    async createCountry(@Body() countryData: { iso_country: string }) {
+    async createCountry(@Body() countryData: {id: string, iso_country: string , continent: string }) {
         try {
             return await this.countryService.createCountry(countryData);
         } catch (error) {
@@ -22,15 +22,15 @@ export class CountryController {
         }
     }
 
-    // Get country ISO/Name
-    @Get(':countryISO')
-    async getCountryIdByISO(@Param('countryISO') countryISO: string) {
+    // Get country ID
+    @Get(':countryID')
+    async getCountryISOByID(@Param('countryID') countryID: string) {
         try {
-            const countryId = await this.countryService.getCountryByISO(countryISO);
-            if (!countryId) {
+            const countryISO = await this.countryService.getCountryByID(countryID);
+            if (!countryISO) {
                 throw new HttpException('Country not found by name', HttpStatus.NOT_FOUND);
             }
-            return { countryId };
+            return { countryISO };
         } catch (error) {
             console.error('Error finding country by ISO:', error);
             throw new HttpException('Failed to find country by ISO', HttpStatus.INTERNAL_SERVER_ERROR);

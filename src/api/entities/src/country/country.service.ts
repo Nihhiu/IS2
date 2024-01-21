@@ -9,15 +9,17 @@ export class CountryService {
         return this.prisma.country.findMany();
     }
 
-    async createCountry(countryData: { iso_country: string }): Promise<any> {
+    async createCountry(countryData: { id: string, iso_country: string, continent: string }): Promise<any> {
         return this.prisma.country.create({
             data: {
+                id: countryData.id,
                 iso_country: countryData.iso_country,
+                continent: countryData.continent,
             },
         });
     }
 
-    async getCountryByISO(isoCountry: string): Promise<any> { 
-        return this.prisma.country.findUnique({ where: { iso_country: isoCountry } }); 
+    async getCountryByID(idCountry: string): Promise<any> { 
+        return this.prisma.country.findUnique({ where: {id: idCountry } }); 
     }
 }

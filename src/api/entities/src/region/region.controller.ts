@@ -27,7 +27,7 @@ export class RegionController {
 
     // Create a new region
     @Post()
-    async createRegion(@Body() regionData: { iso_region: string, country_id: string  }) {
+    async createRegion(@Body() regionData: {id: string, iso_region: string, country_id: string  }) {
         try {
             return await this.regionService.createRegion(regionData);
         } catch (error) {

@@ -20,31 +20,37 @@ model Teacher {
 }
 
 model Country {
-  id          String   @id
+  id          String     @id
   continent   String
   iso_country String
   Region      Region[]
+
+  @@map("country")
 }
 
 model Region {
   id           String    @id
   iso_region   String
-  municipality String
-  gps_code     String
-  local_code   String
+  municipality String?
+  gps_code     String?
+  local_code   String?
   country_id   String
   country      Country   @relation(fields: [country_id], references: [id])
   Airport      Airport[]
+
+  @@map("region")
 }
 
 model Airport {
   id           String @id
-  ident        String
-  type         String
+  ident        String?
+  type         String?
   name         String
-  elevation_ft String
-  iata_code    String
-  coordinates  String
+  elevation_ft String?
+  iata_code    String?
+  coordinates  String?
   region_id    String
   region       Region @relation(fields: [region_id], references: [id])
+
+  @@map("airport")
 }

@@ -170,5 +170,3 @@ class Query:
         ]
 
         return formatted_airport
-
-    

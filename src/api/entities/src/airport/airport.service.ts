@@ -9,7 +9,7 @@ export class AirportService {
         return this.prisma.airport.findMany();
     }
 
-    async createAirport(airportData: { name: string, region_id: string }): Promise<any> {
+    async createAirport(airportData: {id: string, name: string, region_id: string }): Promise<any> {
         try {
             const region = await this.prisma.region.findFirst({
                 where: { id: airportData.region_id },
@@ -21,6 +21,7 @@ export class AirportService {
     
             return await this.prisma.airport.create({
                 data: {
+                    id: airportData.id,
                     name: airportData.name,
                     region: { connect: { id: region.id } },
                 },
