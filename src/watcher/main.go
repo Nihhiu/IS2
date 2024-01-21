@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"log"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/streadway/amqp"
@@ -127,7 +128,7 @@ func atualizarJSON(newNames []string) {
 	// Verificar se há novos ficheiros para adicionar
 	var newFiles []string
 	for _, name := range newNames {
-		if !nameExist[nome] {
+		if !nameExist[name] {
 			newFiles = append(newFiles, name)
 			nameExist[name] = true
 		}

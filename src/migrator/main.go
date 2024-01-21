@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"log"
 	"time"
+	"strings	"
 
 	"github.com/antchfx/xmlquery"
 	_ "github.com/lib/pq"
@@ -15,20 +16,20 @@ import (
 )
 
 type Country struct {
-	XMLName xml.Name `xml:"country"`
-	Id      string   `xml:"id,attr"`
-	Name    string   `xml:"iso_country,chardata"`
+	XMLName     xml.Name `xml:"country"`
+	Id          string   `xml:"id,attr"`
+	Name        string   `xml:"iso_country,attr"`
 }
 
 type Region struct {
-	XMLName xml.Name `xml:"region"`
-	Id      string   `xml:"id,attr"`
-	Name    string   `xml:"iso_region,attr"`
+	XMLName 	xml.Name `xml:"region"`
+	Id     		string   `xml:"id,attr"`
+	Name    	string   `xml:"iso_region,attr"`
 }
 type Airport struct {
-    XMLName   xml.Name `xml:"airport"`
-    Id        string   `xml:"id,attr"`
-    Name      string   `xml:"name,attr"`
+    XMLName   	xml.Name `xml:"airport"`
+    Id        	string   `xml:"id,attr"`
+    Name     	string   `xml:"name,attr"`
 }
 
 const (
@@ -106,7 +107,8 @@ func processCountry(doc *xmlquery.Node) {
 
 	for _, node := range nodes {
 		country := Country{
-			iso_country: node.SelectAttr("iso_country"),
+			Id:   node.SelectAttr("id"),
+			Name: node.SelectAttr("iso_country"),
 		}
 		countries = append(countries, country)
 	}
@@ -158,7 +160,8 @@ func processRegion(doc *xmlquery.Node) {
 
 	for _, node := range nodes {
 		region := Region{
-			iso_region: node.SelectAttr("iso_region"),
+			Id:   node.SelectAttr("id"),
+			Name: node.SelectAttr("iso_region"),
 		}
 		regions = append(regions, region)
 	}
@@ -210,7 +213,8 @@ func processAirport(doc *xmlquery.Node) {
 
 	for _, node := range nodes {
 		airport := Airport{
-			name: node.SelectAttr("name"),
+			Id:   node.SelectAttr("id"),
+			Name: node.SelectAttr("name"),
 		}
 		airports = append(airports, airport)
 	}
