@@ -67,7 +67,7 @@ class Database:
             print(f"\nError: {error}")
     
     #  Connect to the database
-    def selectTudo(self, query, data=None):
+    def selectAll(self, query, data=None):
         self.connect()
         # Execute the SQL query and fetch the result
         with self.cursor as cursor:

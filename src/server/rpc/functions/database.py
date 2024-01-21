@@ -47,7 +47,7 @@ class Database:
             print(f"\nError: {error}")
 
     #Execute the select SQL query with the given data and fetch all rows
-    def selectTudo(self, query, data=None):
+    def selectAll(self, query, data=None):
         self.connect()
         with self.cursor as cursor:
             if data is None:

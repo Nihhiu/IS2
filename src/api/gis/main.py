@@ -32,21 +32,9 @@ def get_airports():
     airports.name,
     airports.elevation_ft,
     airports.iata_code,
-    airports.coordinates,
-    regions.id AS region_id,
-    regions.iso_region,
-    regions.municipality,
-    regions.gps_code,
-    regions.local_code,
-    countries.id AS country_id,
-    countries.continent,
-    countries.iso_country
+    airports.coordinates
     FROM
         public.airports
-    INNER JOIN
-        public.regions ON airports.region = regions.id
-    INNER JOIN
-        public.countries ON regions.country = countries.id;
     """)
 
     if all([ne_lat, ne_lng, sw_lat, sw_lng]):
@@ -75,14 +63,6 @@ def get_airports():
                 "name": row[3],
                 "elevation_ft": row[4],
                 "iata_code": row[5],
-                "region_id": str(row[8]),
-                "iso_region": row[9],
-                "municipality": row[10],
-                "gps_code": row[11],
-                "local_code": row[12],
-                "country_id": str(row[13]),
-                "continent": row[14],
-                "iso_country": row[15],
                 "img": "https://img.icons8.com/?size=256&id=hKWbKdldBDoa&format=png"
             }
         })

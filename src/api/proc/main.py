@@ -11,27 +11,37 @@ app.config["DEBUG"] = True
 
 server = xmlrpc.client.ServerProxy("http://rpc-server:9000")
 
-@app.route('/api/country', methods=['GET'])
+@app.route('/country', methods=['GET'])
 def get_all_country():
     country = server.fetch_country()
     return country
 
-@app.route('/api/region/country/<iso_country>', methods=['GET'])
+@app.route('/region', methods=['GET'])
+def get_Region():
+    region = server.fetch_region()
+    return region
+
+@app.route('/airport', methods=['GET'])
+def get_Airport(iso_region):
+    airport = server.fetch_airport()
+    return airport
+
+@app.route('/region/country/<iso_country>', methods=['GET'])
 def get_regionByCountry(iso_country):
     region = server.fetch_region_by_country(iso_country)
     return region
 
-@app.route('/api/airport/region/<iso_region>', methods=['GET'])
+@app.route('/airport/region/<iso_region>', methods=['GET'])
 def get_airportByRegion(iso_region):
     airport = server.fetch_airport_by_region(iso_region)
     return airport
 
-@app.route('/api/airport/highest', methods=['GET'])
+@app.route('/airport/highest', methods=['GET'])
 def get_airportHighest():
     airport = server.fetch_airport_higest()
     return airport
 
-@app.route('/api/airport/lowest', methods=['GET'])
+@app.route('/airport/lowest', methods=['GET'])
 def get_airportLowest():
     airport = server.fetch_airport_lowest()
     return airport

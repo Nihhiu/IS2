@@ -93,7 +93,7 @@ class CSVHandler(FileSystemEventHandler):
         # Obtem lista de ficheiros convertidos na db
         files = []
         database = Database()
-        for file in database.selectTudo("SELECT src FROM converted_documents"):
+        for file in database.selectAll("SELECT src FROM converted_documents"):
             files.append(file[0])
 
         return files

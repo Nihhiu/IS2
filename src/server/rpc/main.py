@@ -32,6 +32,8 @@ if __name__ == "__main__":
 
         #queries
         server.register_function(query_functions.fetch_country)
+        server.register_function(query_functions.fetch_region)
+        server.register_function(query_functions.fetch_airport)
         server.register_function(query_functions.fetch_region_by_country)
         server.register_function(query_functions.fetch_airport_by_region)
         server.register_function(query_functions.fetch_airport_highest)

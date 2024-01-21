@@ -22,8 +22,8 @@ export default function AirportsPage() {
       <main>
         <b>Airports Page</b>: 
         <ul>
-          {airport.map((airport) => (
-            <li key={airport.id}>{airport.name  }</li> 
+          {setAirport.map((airport) => (
+            <li key={airport.id}>{airport.name}</li> 
           ))}
         </ul>
       </main>
